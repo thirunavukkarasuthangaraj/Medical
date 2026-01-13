@@ -110,36 +110,46 @@ Healing Naturally, Living Fully`;
     const cleanPhone = phone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/91${cleanPhone}?text=${encodeURIComponent(message)}`;
 
-    // Return HTML page that redirects to WhatsApp
+    // Return HTML page with WhatsApp button
     const html = `<!DOCTYPE html>
 <html>
 <head>
   <title>Appointment Confirmed!</title>
   <meta charset="UTF-8">
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background: #E8F5E9; }
-    .success { color: #2E7D32; font-size: 28px; margin-bottom: 20px; font-weight: bold; }
-    .info { color: #555; font-size: 18px; margin-bottom: 10px; }
-    .phone { color: #1976D2; font-size: 20px; margin: 20px 0; font-weight: bold; }
-    .btn { display: inline-block; padding: 15px 40px; background: #25D366; color: white; text-decoration: none; border-radius: 10px; font-size: 18px; font-weight: bold; margin: 10px; }
+    * { box-sizing: border-box; }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 30px; background: linear-gradient(135deg, #E8F5E9, #C8E6C9); min-height: 100vh; margin: 0; }
+    .container { background: white; max-width: 500px; margin: 0 auto; padding: 40px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); }
+    .check { width: 80px; height: 80px; background: #4CAF50; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+    .check svg { width: 40px; height: 40px; fill: white; }
+    .success { color: #2E7D32; font-size: 24px; margin-bottom: 10px; font-weight: bold; }
+    .info { color: #666; font-size: 16px; margin-bottom: 8px; }
+    .phone-box { background: #E3F2FD; padding: 15px; border-radius: 10px; margin: 20px 0; }
+    .phone { color: #1976D2; font-size: 22px; font-weight: bold; margin: 0; }
+    .btn { display: block; width: 100%; padding: 18px; background: #25D366; color: white; text-decoration: none; border-radius: 12px; font-size: 18px; font-weight: bold; margin: 15px 0; border: none; cursor: pointer; }
     .btn:hover { background: #1DA851; }
     .meet-btn { background: #1a73e8; }
     .meet-btn:hover { background: #1557b0; }
+    .close-btn { background: #9E9E9E; font-size: 14px; padding: 12px; }
+    .close-btn:hover { background: #757575; }
   </style>
 </head>
 <body>
-  <div class="success">Status Updated to CONFIRMED!</div>
-  <div class="info">Appointment ID: ${appointmentId}</div>
-  <div class="phone">Sending WhatsApp to Patient: +91 ${cleanPhone}</div>
-  ${meetLink ? '<div class="info">Google Calendar Event Created with Meet Link!</div>' : ''}
-  <br><br>
-  <a href="${whatsappUrl}" class="btn">Open WhatsApp</a>
-  ${meetLink ? `<a href="${meetLink}" class="meet-btn btn">Join Google Meet</a>` : ''}
-  <script>
-    setTimeout(function() {
-      window.location.href = "${whatsappUrl}";
-    }, 1500);
-  </script>
+  <div class="container">
+    <div class="check">
+      <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+    </div>
+    <div class="success">Appointment Confirmed!</div>
+    <div class="info">ID: ${appointmentId}</div>
+    <div class="info">Patient: ${name}</div>
+    <div class="phone-box">
+      <p class="phone">+91 ${cleanPhone}</p>
+    </div>
+    ${meetLink ? '<div class="info" style="color:#1a73e8;">Calendar Event Created with Meet Link</div>' : ''}
+    <a href="${whatsappUrl}" target="_blank" class="btn">Send WhatsApp Message</a>
+    ${meetLink ? '<a href="' + meetLink + '" target="_blank" class="btn meet-btn">Open Google Meet</a>' : ''}
+    <button onclick="window.close()" class="btn close-btn">Close This Window</button>
+  </div>
 </body>
 </html>`;
 
