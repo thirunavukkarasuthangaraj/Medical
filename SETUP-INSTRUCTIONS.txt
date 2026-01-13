@@ -1,0 +1,246 @@
+================================================================================
+        DR. DEVINI'S HOMEOPATHY CLINIC - WEBSITE SETUP GUIDE
+================================================================================
+
+This guide will help you set up the FREE Google Apps Script backend for
+appointment bookings. Total cost: ₹0 (ZERO)
+
+================================================================================
+PART 1: GOOGLE APPS SCRIPT SETUP (10-15 minutes)
+================================================================================
+
+STEP 1: Create a Google Sheet
+-----------------------------
+1. Go to https://sheets.google.com
+2. Click "+ Blank" to create a new spreadsheet
+3. Name it: "Dr Devini Clinic - Appointments"
+4. Keep this tab open
+
+STEP 2: Open Google Apps Script
+-------------------------------
+1. In your Google Sheet, click: Extensions > Apps Script
+2. This opens the script editor in a new tab
+3. Delete any existing code in the editor
+
+STEP 3: Add the Backend Code
+----------------------------
+1. Open the file "google-apps-script.js" from this folder
+2. Copy ALL the code (Ctrl+A, then Ctrl+C)
+3. Paste it into the Google Apps Script editor (Ctrl+V)
+
+STEP 4: Configure Your Settings
+-------------------------------
+Find this section at the top of the code and update:
+
+    const CONFIG = {
+      DOCTOR_EMAIL: 'drdevini@gmail.com',  // <-- Change to actual email
+      CLINIC_NAME: "Dr. Devini's Homeopathy Clinic",
+      SHEET_NAME: 'Appointments',
+      SEND_PATIENT_EMAIL: true,
+      WHATSAPP_NUMBER: '919876543210'  // <-- Change to actual number
+    };
+
+STEP 5: Save and Run Initial Setup
+----------------------------------
+1. Click the Save icon (or Ctrl+S)
+2. Name your project: "Dr Devini Appointments"
+3. In the function dropdown (top), select "initialSetup"
+4. Click "Run"
+5. First time: You'll need to authorize:
+   - Click "Review Permissions"
+   - Select your Google account
+   - Click "Advanced" > "Go to Dr Devini Appointments (unsafe)"
+   - Click "Allow"
+6. Check your Google Sheet - an "Appointments" tab should be created
+
+STEP 6: Deploy as Web App
+-------------------------
+1. Click "Deploy" > "New deployment"
+2. Click the gear icon ⚙️ next to "Select type"
+3. Choose "Web app"
+4. Configure:
+   - Description: "Appointment Booking API"
+   - Execute as: "Me"
+   - Who has access: "Anyone"
+5. Click "Deploy"
+6. COPY THE WEB APP URL (looks like: https://script.google.com/macros/s/xxx.../exec)
+7. Save this URL! You'll need it next.
+
+================================================================================
+PART 2: CONNECT WEBSITE TO BACKEND (2 minutes)
+================================================================================
+
+STEP 1: Update the Website Code
+-------------------------------
+1. Open "script.js" in a text editor (Notepad or VS Code)
+2. Find this line at the top (line 3):
+
+   const GOOGLE_SCRIPT_URL = 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE';
+
+3. Replace it with your URL:
+
+   const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/YOUR_ACTUAL_URL/exec';
+
+4. Save the file
+
+STEP 2: Test the Form
+--------------------
+1. Open index.html in a browser
+2. Fill out the appointment form
+3. Submit it
+4. Check:
+   - Your Google Sheet (new row should appear)
+   - Doctor's email (notification should arrive)
+   - Patient's email if provided (confirmation should arrive)
+
+================================================================================
+PART 3: HOSTING THE WEBSITE (FREE OPTIONS)
+================================================================================
+
+OPTION A: GitHub Pages (Recommended - 100% Free)
+------------------------------------------------
+1. Create a GitHub account at github.com
+2. Create a new repository named: drdevini-clinic
+3. Upload all website files (index.html, styles.css, script.js)
+4. Go to Settings > Pages
+5. Source: Deploy from branch > main
+6. Your site will be live at: https://username.github.io/drdevini-clinic
+
+OPTION B: Netlify (100% Free)
+-----------------------------
+1. Go to netlify.com
+2. Sign up with GitHub
+3. Click "Add new site" > "Deploy manually"
+4. Drag and drop the website folder
+5. Get your free URL (e.g., random-name.netlify.app)
+6. You can set a custom name in Site settings
+
+OPTION C: Vercel (100% Free)
+----------------------------
+1. Go to vercel.com
+2. Sign up with GitHub
+3. Click "New Project"
+4. Upload your files
+5. Deploy and get free URL
+
+================================================================================
+PART 4: CUSTOM DOMAIN (Optional - Low Cost)
+================================================================================
+
+If you want a professional domain like drdeviniclinic.com:
+
+1. Buy domain from:
+   - GoDaddy.com (~₹99-500/year for .com)
+   - Namecheap.com (~₹700/year)
+   - Google Domains (~₹1000/year)
+   - Hostinger.in (~₹99/year for .in)
+
+2. Connect to your free hosting:
+   - GitHub Pages: Add CNAME file with your domain
+   - Netlify: Settings > Domain management > Add custom domain
+   - Both provide free SSL certificate
+
+================================================================================
+PART 5: UPDATING CLINIC INFORMATION
+================================================================================
+
+To customize the website, edit these files:
+
+1. index.html - Update:
+   - Phone numbers (search: 98765 43210)
+   - Email addresses (search: drdevini@)
+   - Clinic address
+   - Social media links
+   - Google Maps embed code
+
+2. script.js - Update:
+   - WhatsApp number in links
+   - Google Script URL
+
+3. google-apps-script.js - Update:
+   - Doctor's email
+   - WhatsApp number
+
+================================================================================
+WHAT YOU GET (FREE)
+================================================================================
+
+✅ Professional website with 12+ sections
+✅ Appointment booking form with validation
+✅ Data saved to Google Sheets
+✅ Email notifications to doctor
+✅ Confirmation emails to patients
+✅ WhatsApp integration
+✅ Mobile responsive design
+✅ Tamil/English language toggle
+✅ BMI Calculator
+✅ FAQ section
+✅ Testimonials slider
+✅ Contact form
+✅ Google Maps integration
+✅ SSL security (with free hosting)
+
+================================================================================
+MONTHLY GOOGLE QUOTAS (FREE)
+================================================================================
+
+Google Apps Script free limits:
+- Email: 100 emails/day (plenty for a clinic)
+- Script runs: 6 minutes/execution
+- Triggers: 20 per user
+- Storage: 15 GB Google Drive space
+
+These limits are MORE than enough for a clinic website!
+
+================================================================================
+TROUBLESHOOTING
+================================================================================
+
+Problem: Form doesn't submit
+Solution:
+1. Check browser console (F12) for errors
+2. Verify Google Script URL is correct
+3. Make sure you deployed as "Anyone" access
+
+Problem: No email received
+Solution:
+1. Check spam folder
+2. Verify email address in CONFIG
+3. Run testEmailNotification() in Apps Script
+
+Problem: Data not appearing in Sheet
+Solution:
+1. Run initialSetup() first
+2. Check the correct sheet tab is selected
+3. Verify web app is deployed properly
+
+Problem: CORS errors
+Solution:
+- This is normal with no-cors mode
+- Form will still work if URL is correct
+
+================================================================================
+SUPPORT
+================================================================================
+
+For website issues, check:
+- Browser console for errors (F12 > Console)
+- Google Apps Script execution logs
+
+For Google Apps Script help:
+- https://developers.google.com/apps-script
+
+================================================================================
+FILE SUMMARY
+================================================================================
+
+📁 medicalwebsite/
+├── index.html              - Main website
+├── styles.css              - Styling
+├── script.js               - Frontend JavaScript
+├── google-apps-script.js   - Backend code (copy to Google)
+└── SETUP-INSTRUCTIONS.txt  - This file
+
+================================================================================
+                    🌿 Best wishes for Dr. Devini's clinic! 🌿
+================================================================================
