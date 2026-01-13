@@ -123,6 +123,9 @@ function checkSlotAvailability(dateStr) {
  * Confirm appointment and open WhatsApp to PATIENT
  */
 function confirmAndWhatsApp(params) {
+  console.log('=== CONFIRM AND WHATSAPP START ===');
+  console.log('Params received:', JSON.stringify(params));
+
   try {
     const appointmentId = params.id;
     const phone = params.phone;
@@ -130,6 +133,13 @@ function confirmAndWhatsApp(params) {
     const date = decodeURIComponent(params.date || '');
     const time = decodeURIComponent(params.time || '');
     const service = decodeURIComponent(params.service || '');
+
+    console.log('Appointment ID:', appointmentId);
+    console.log('Phone:', phone);
+    console.log('Name:', name);
+    console.log('Date:', date);
+    console.log('Time:', time);
+    console.log('Service:', service);
 
     // Update status in sheet and get email
     const ss = SpreadsheetApp.getActiveSpreadsheet();
@@ -323,6 +333,15 @@ Healing Naturally, Living Fully`;
  * @param {boolean} isOnline - If true, create with Google Meet link; if false, just reminder
  */
 function createCalendarEvent(appointmentId, patientName, patientEmail, dateStr, timeStr, service, isOnline) {
+  console.log('=== CREATE CALENDAR EVENT START ===');
+  console.log('Appointment ID:', appointmentId);
+  console.log('Patient:', patientName);
+  console.log('Email:', patientEmail);
+  console.log('Date:', dateStr);
+  console.log('Time:', timeStr);
+  console.log('Service:', service);
+  console.log('Is Online:', isOnline);
+
   try {
     let eventDate = new Date(dateStr);
     if (isNaN(eventDate)) {
@@ -376,6 +395,10 @@ CLINIC VISIT REMINDER
 Please arrive 10 minutes early with previous medical reports.`;
     }
 
+    console.log('Creating calendar event...');
+    console.log('Start Time:', startTime);
+    console.log('End Time:', endTime);
+
     const event = calendar.createEvent(
       `Dr. Devini Clinic - ${patientName} (${consultType})`,
       startTime,
@@ -387,6 +410,9 @@ Please arrive 10 minutes early with previous medical reports.`;
       }
     );
 
+    console.log('✅ CALENDAR EVENT CREATED!');
+    console.log('Event ID:', event.getId());
+
     event.addPopupReminder(60);
     event.addPopupReminder(15);
 
@@ -394,9 +420,13 @@ Please arrive 10 minutes early with previous medical reports.`;
 
     // Only create Google Meet link for ONLINE consultations
     if (isOnline) {
+      console.log('Creating Google Meet link for online consultation...');
       try {
         const eventId = event.getId().split('@')[0];
         const calendarId = calendar.getId();
+        console.log('Event ID:', eventId);
+        console.log('Calendar ID:', calendarId);
+
         const resource = Calendar.Events.get(calendarId, eventId);
         resource.conferenceData = {
           createRequest: {
@@ -407,15 +437,19 @@ Please arrive 10 minutes early with previous medical reports.`;
         const updatedEvent = Calendar.Events.patch(resource, calendarId, eventId, { conferenceDataVersion: 1 });
         if (updatedEvent.conferenceData && updatedEvent.conferenceData.entryPoints) {
           meetLink = updatedEvent.conferenceData.entryPoints[0].uri;
+          console.log('✅ GOOGLE MEET LINK CREATED:', meetLink);
         }
       } catch (meetError) {
-        console.log('Meet link creation failed: ' + meetError.message);
+        console.log('❌ Meet link creation failed:', meetError.message);
       }
+    } else {
+      console.log('Offline consultation - no Meet link needed');
     }
 
+    console.log('=== CREATE CALENDAR EVENT END ===');
     return { success: true, meetLink: meetLink, isOnline: isOnline };
   } catch (error) {
-    console.error('Calendar error:', error);
+    console.error('❌ CALENDAR ERROR:', error.message);
     return { success: false, error: error.message };
   }
 }
