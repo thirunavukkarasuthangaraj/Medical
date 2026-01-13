@@ -17,8 +17,8 @@ const CONFIG = {
 
   // MSG91 SMS Configuration
   MSG91_AUTH_KEY: 'YOUR_AUTH_KEY_HERE',        // Replace with your MSG91 Auth Key
-  MSG91_SENDER_ID: 'DEVINI',                    // Replace with your 6-char Sender ID
-  MSG91_TEMPLATE_ID: 'YOUR_TEMPLATE_ID_HERE',   // Replace with your DLT Template ID
+  MSG91_SENDER_ID: 'NAMMAO',                    // Sender ID from DLT
+  MSG91_TEMPLATE_ID: '1207176226012464195',     // Current template (change after new approval)
   SEND_SMS: true                                // Set to false to disable SMS
 };
 
@@ -51,14 +51,19 @@ function sendSMS(phone, variables) {
     // MSG91 Flow API
     const url = 'https://control.msg91.com/api/v5/flow/';
 
+    // Build payload based on template
+    // Current OTP template has 1 variable - combine all info for testing
+    // After new template approved, update to use separate variables
+    const combinedInfo = `${variables.name} - ${variables.appointmentId} - ${variables.date} ${variables.time}`;
+
     const payload = {
       flow_id: CONFIG.MSG91_TEMPLATE_ID,
       mobiles: cleanPhone,
-      // Template variables - adjust these based on your DLT template
-      VAR1: variables.name || '',
-      VAR2: variables.appointmentId || '',
-      VAR3: variables.date || '',
-      VAR4: variables.time || ''
+      VAR1: combinedInfo
+      // Uncomment below after new template is approved:
+      // VAR1: variables.name || '',
+      // VAR2: variables.appointmentId || '',
+      // VAR3: variables.dateTime || ''  // Combined date+time
     };
 
     const options = {
