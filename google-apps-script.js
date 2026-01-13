@@ -131,17 +131,37 @@ function confirmAndWhatsApp(params) {
     const time = decodeURIComponent(params.time || '');
     const service = decodeURIComponent(params.service || '');
 
-    // Update status in sheet
+    // Update status in sheet and get email
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
     let patientEmail = '';
+    let debugInfo = 'Debug: ';
 
     if (sheet) {
       const data = sheet.getDataRange().getValues();
+      const headers = data[0];
+
+      // Find email column index dynamically
+      let emailColIndex = -1;
+      let statusColIndex = -1;
+      for (let c = 0; c < headers.length; c++) {
+        if (headers[c].toString().toLowerCase().includes('email')) emailColIndex = c;
+        if (headers[c].toString().toLowerCase() === 'status') statusColIndex = c;
+      }
+
+      debugInfo += `EmailCol:${emailColIndex}, StatusCol:${statusColIndex}. `;
+
       for (let i = 1; i < data.length; i++) {
         if (data[i][0] === appointmentId) {
-          sheet.getRange(i + 1, 12).setValue('Confirmed'); // Status is now column 12
-          patientEmail = data[i][4]; // Email is still column 5 (index 4)
+          // Update status
+          if (statusColIndex >= 0) {
+            sheet.getRange(i + 1, statusColIndex + 1).setValue('Confirmed');
+          }
+          // Get email
+          if (emailColIndex >= 0) {
+            patientEmail = data[i][emailColIndex];
+          }
+          debugInfo += `Found row ${i+1}, Email: ${patientEmail}. `;
           break;
         }
       }
@@ -149,8 +169,17 @@ function confirmAndWhatsApp(params) {
 
     // Create calendar event
     let meetLink = '';
+    let calendarError = '';
     if (patientEmail) {
-      meetLink = createCalendarEvent(appointmentId, name, patientEmail, date, time, service);
+      try {
+        meetLink = createCalendarEvent(appointmentId, name, patientEmail, date, time, service);
+        debugInfo += `Calendar created. Meet: ${meetLink || 'none'}. `;
+      } catch (calErr) {
+        calendarError = calErr.message;
+        debugInfo += `Calendar error: ${calErr.message}. `;
+      }
+    } else {
+      debugInfo += 'No email found - skipping calendar. ';
     }
 
     // WhatsApp message TO PATIENT
@@ -226,9 +255,11 @@ Healing Naturally, Living Fully`;
       <p class="phone">+91 ${cleanPhone}</p>
     </div>
     ${meetLink ? '<div class="info" style="color:#1a73e8;">Calendar Event Created with Meet Link</div>' : ''}
+    ${calendarError ? '<div class="info" style="color:#e53935;">Calendar Error: ' + calendarError + '</div>' : ''}
     <a href="${whatsappUrl}" target="_blank" class="btn">Send WhatsApp Message</a>
     ${meetLink ? '<a href="' + meetLink + '" target="_blank" class="btn meet-btn">Open Google Meet</a>' : ''}
     <button onclick="window.close()" class="btn close-btn">Close This Window</button>
+    <div style="margin-top:15px;padding:10px;background:#f5f5f5;border-radius:8px;font-size:11px;color:#666;text-align:left;word-break:break-all;">${debugInfo}</div>
   </div>
 </body>
 </html>`;
@@ -473,11 +504,13 @@ function saveToSheet(data, appointmentId) {
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
-    const headers = ['Appointment ID', 'Timestamp', 'Name', 'Phone', 'Email', 'Gender', 'Age', 'Preferred Date', 'Preferred Time', 'Service', 'Health Concern', 'Status', 'Notes', 'Consultation Date', 'Diagnosis', 'Medicines Prescribed', 'Next Follow-up'];
+    const headers = ['Appointment ID', 'Timestamp', 'Name', 'Phone', 'Email', 'Gender', 'Age', 'Preferred Date', 'Preferred Time', 'Service', 'Consultation Type', 'Health Concern', 'Status', 'Notes', 'Consultation Date', 'Diagnosis', 'Medicines Prescribed', 'Next Follow-up'];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#2E7D32').setFontColor('#FFFFFF');
     sheet.setFrozenRows(1);
   }
+
+  const consultType = data.consultationType === 'online' ? 'Online (Video)' : 'In-Person (Clinic)';
 
   const rowData = [
     appointmentId,
@@ -490,6 +523,7 @@ function saveToSheet(data, appointmentId) {
     formatDate(data.date),
     data.time || 'Not specified',
     data.service || '',
+    consultType,
     data.message || '',
     'Pending',
     ''
