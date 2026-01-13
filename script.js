@@ -1,6 +1,6 @@
 // ===== CONFIGURATION =====
 // IMPORTANT: Replace this URL with your deployed Google Apps Script Web App URL
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxthTWG43ulqeGLpK-u8qfZ09MphOBcPd7rB5h7GCLzglZ2tLQTRI6Kpzd2iHEu_eCXlw/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzaUQ3tt8WoWCnaMQYIiS3-I3hWu-yWAxqZbILZnOnYjMUbH8DxLEBiJPLKKLk5IT5yQ/exec';
 
 // ===== Preloader =====
 window.addEventListener('load', () => {
@@ -567,6 +567,27 @@ document.addEventListener('DOMContentLoaded', () => {
         const today = new Date().toISOString().split('T')[0];
         dateInput.setAttribute('min', today);
     }
+
+    // ===== Show/Hide Payment Info for Online Consultation =====
+    // COMMENTED OUT - Payment feature disabled for now
+    // const consultationType = document.getElementById('consultationType');
+    // const paymentInfo = document.getElementById('paymentInfo');
+    // const submitBtn = document.querySelector('.btn-submit');
+    // const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+
+    // if (consultationType && paymentInfo && submitBtn) {
+    //     consultationType.addEventListener('change', function() {
+    //         if (this.value === 'online') {
+    //             paymentInfo.style.display = 'block';
+    //             submitBtn.innerHTML = '<span>Book & Pay Rs 250</span><i class="fas fa-credit-card"></i>';
+    //             submitBtn.style.background = 'linear-gradient(135deg, #4CAF50, #2E7D32)';
+    //         } else {
+    //             paymentInfo.style.display = 'none';
+    //             submitBtn.innerHTML = originalBtnText;
+    //             submitBtn.style.background = '';
+    //         }
+    //     });
+    // }
 });
 
 // ===== Slot Availability Checking =====
