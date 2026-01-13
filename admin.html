@@ -475,6 +475,52 @@
             }
         }
 
+        /* Date Filter */
+        .date-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .date-filter label {
+            font-size: 14px;
+            color: #555;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .date-input {
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: 'Poppins', sans-serif;
+            transition: border-color 0.3s;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #4CAF50;
+        }
+
+        .clear-date-btn {
+            padding: 10px 15px;
+            background: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+
+        .clear-date-btn:hover {
+            background: #f57c00;
+        }
+
         /* Refresh Button */
         .refresh-btn {
             padding: 10px 20px;
@@ -563,6 +609,13 @@
                     <button class="filter-btn" data-filter="Pending">Pending</button>
                     <button class="filter-btn" data-filter="Confirmed">Confirmed</button>
                     <button class="filter-btn" data-filter="Consulted">Consulted</button>
+                </div>
+                <div class="date-filter">
+                    <label><i class="fas fa-calendar"></i> From:</label>
+                    <input type="date" id="dateFrom" class="date-input">
+                    <label>To:</label>
+                    <input type="date" id="dateTo" class="date-input">
+                    <button class="clear-date-btn" onclick="clearDateFilter()">Clear</button>
                 </div>
                 <input type="text" class="search-box" placeholder="Search by name or phone..." id="searchBox">
                 <button class="refresh-btn" onclick="loadAppointments()">
@@ -803,6 +856,8 @@
         function renderTable() {
             const tableBody = document.getElementById('appointmentsTable');
             const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const dateFrom = document.getElementById('dateFrom').value;
+            const dateTo = document.getElementById('dateTo').value;
 
             let filtered = allAppointments;
 
@@ -817,6 +872,23 @@
                     (a.name && a.name.toLowerCase().includes(searchTerm)) ||
                     (a.phone && a.phone.includes(searchTerm))
                 );
+            }
+
+            // Apply date filter
+            if (dateFrom) {
+                filtered = filtered.filter(a => {
+                    const aptDate = parseDate(a.preferredDate || a.timestamp);
+                    return aptDate >= new Date(dateFrom);
+                });
+            }
+
+            if (dateTo) {
+                filtered = filtered.filter(a => {
+                    const aptDate = parseDate(a.preferredDate || a.timestamp);
+                    const toDate = new Date(dateTo);
+                    toDate.setHours(23, 59, 59); // Include entire day
+                    return aptDate <= toDate;
+                });
             }
 
             if (filtered.length === 0) {
@@ -849,6 +921,27 @@
             `).join('');
         }
 
+        // Parse date from various formats
+        function parseDate(dateStr) {
+            if (!dateStr) return new Date(0);
+            // Try parsing common formats
+            const date = new Date(dateStr);
+            if (!isNaN(date)) return date;
+            // Handle DD/MM/YYYY format
+            const parts = dateStr.split(/[\/\-\.]/);
+            if (parts.length === 3) {
+                return new Date(parts[2], parts[1] - 1, parts[0]);
+            }
+            return new Date(0);
+        }
+
+        // Clear date filter
+        function clearDateFilter() {
+            document.getElementById('dateFrom').value = '';
+            document.getElementById('dateTo').value = '';
+            renderTable();
+        }
+
         // Filter Buttons
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -861,6 +954,8 @@
 
         // Search Box
         document.getElementById('searchBox').addEventListener('input', renderTable);
+        document.getElementById('dateFrom').addEventListener('change', renderTable);
+        document.getElementById('dateTo').addEventListener('change', renderTable);
 
         // Edit Appointment
         function editAppointment(rowIndex) {
