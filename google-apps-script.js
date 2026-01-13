@@ -436,7 +436,28 @@ function sendDoctorNotification(data, appointmentId) {
 
             <div style="margin-top: 25px; text-align: center;">
               <a href="tel:${data.phone}" class="btn">Call Patient</a>
-              <a href="https://wa.me/91${data.phone.replace(/\D/g, '')}?text=Hello%20${encodeURIComponent(data.name)},%20this%20is%20Dr.%20Devini's%20Clinic.%20Your%20appointment%20for%20${encodeURIComponent(formatDate(data.date))}%20is%20confirmed." class="btn" style="background: #25D366;">WhatsApp</a>
+              <a href="https://wa.me/91${data.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${data.name},
+
+This is Dr. Devini's Homeopathy Clinic.
+
+✅ Your appointment is CONFIRMED!
+
+📋 Appointment ID: ${appointmentId}
+📅 Date: ${formatDate(data.date)}
+⏰ Time: ${getTimeLabel(data.time)}
+🏥 Service: ${getServiceLabel(data.service)}
+
+📍 Address:
+Dr. Devini's Homeopathy Clinic
+Velachery Main Road, Velachery
+Chennai - 600042
+
+📞 Contact: +91 8144002155
+
+Please arrive 10 minutes early with any previous medical reports.
+
+Thank you for choosing us!
+🌿 Healing Naturally, Living Fully`)}" class="btn" style="background: #25D366;">WhatsApp</a>
             </div>
           </div>
           <div class="footer">

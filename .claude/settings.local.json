@@ -3,7 +3,8 @@
     "allow": [
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd server-side authentication for admin panel\n\n- Move login credentials to Google Apps Script \\(hidden from browser\\)\n- Add handleLogin function for secure authentication\n- Remove hardcoded password from admin.html\n- Add loading spinner during login verification\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nAdd server-side authentication for admin panel\n\n- Move login credentials to Google Apps Script \\(hidden from browser\\)\n- Add handleLogin function for secure authentication\n- Remove hardcoded password from admin.html\n- Add loading spinner during login verification\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git commit:*)"
     ]
   }
 }
