@@ -34,9 +34,89 @@ function doGet(e) {
     return confirmAndWhatsApp(e.parameter);
   }
 
+  if (action === 'checkSlots') {
+    return checkSlotAvailability(e.parameter.date);
+  }
+
   return ContentService
     .createTextOutput(JSON.stringify({ status: 'success', message: 'API running' }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Check slot availability for a given date
+ * Returns available spots for each time slot (max 3 per slot)
+ */
+function checkSlotAvailability(dateStr) {
+  try {
+    const MAX_PER_SLOT = 3;
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+
+    // All time slots
+    const allSlots = [
+      '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
+      '12:00', '12:30', '13:00', '13:30', '14:00', '14:30',
+      '15:00', '15:30', '16:00', '16:30', '17:00', '17:30',
+      '18:00', '18:30', '19:00'
+    ];
+
+    // Initialize slot counts
+    const slotCounts = {};
+    allSlots.forEach(slot => slotCounts[slot] = 0);
+
+    if (sheet) {
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        const rowDate = data[i][6]; // Preferred Date column
+        const rowTime = data[i][7]; // Preferred Time column
+        const status = data[i][10]; // Status column
+
+        // Skip cancelled appointments
+        if (status && status.toLowerCase() === 'cancelled') continue;
+
+        // Check if date matches
+        let dateMatches = false;
+        if (rowDate) {
+          const rowDateStr = rowDate instanceof Date
+            ? rowDate.toISOString().split('T')[0]
+            : String(rowDate);
+
+          // Try to match the date
+          if (rowDateStr.includes(dateStr) || dateStr.includes(rowDateStr.split('T')[0])) {
+            dateMatches = true;
+          }
+          // Also check formatted date
+          if (String(rowDate).includes(dateStr.split('-').reverse().join('/'))) {
+            dateMatches = true;
+          }
+        }
+
+        if (dateMatches && rowTime && slotCounts.hasOwnProperty(rowTime)) {
+          slotCounts[rowTime]++;
+        }
+      }
+    }
+
+    // Calculate available spots
+    const availability = {};
+    allSlots.forEach(slot => {
+      availability[slot] = {
+        booked: slotCounts[slot],
+        available: MAX_PER_SLOT - slotCounts[slot],
+        full: slotCounts[slot] >= MAX_PER_SLOT
+      };
+    });
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: true, date: dateStr, slots: availability, maxPerSlot: MAX_PER_SLOT }))
+      .setMimeType(ContentService.MimeType.JSON);
+
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /**

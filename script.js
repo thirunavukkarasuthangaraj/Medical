@@ -1,6 +1,6 @@
 // ===== CONFIGURATION =====
 // IMPORTANT: Replace this URL with your deployed Google Apps Script Web App URL
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwzkfayA9SiqmwELrnZ8gZrx9UBf5Cq3_aDXvWAF0T9DrJgSsNNLtupxAcRsSrE9Rnj/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbySOqqGc97vRqTNw3xXmM_ZDjSt0-SviKbuQM8Xd80pwhzlfV99aqbgTjMuDqdJl7SkQw/exec';
 
 // ===== Preloader =====
 window.addEventListener('load', () => {
@@ -339,8 +339,16 @@ if (appointmentForm) {
         });
 
         // Basic validation
-        if (!data.name || !data.phone || !data.date || !data.service) {
+        if (!data.name || !data.phone || !data.date || !data.service || !data.time) {
             showNotification('Please fill in all required fields.', 'error');
+            return;
+        }
+
+        // Check if selected time slot is marked as full (disabled option selected)
+        const timeSelectEl = this.querySelector('select[name="time"]');
+        const selectedOption = timeSelectEl.options[timeSelectEl.selectedIndex];
+        if (selectedOption && selectedOption.disabled) {
+            showNotification('This time slot is full. Please select another time.', 'error');
             return;
         }
 
@@ -560,6 +568,91 @@ document.addEventListener('DOMContentLoaded', () => {
         dateInput.setAttribute('min', today);
     }
 });
+
+// ===== Slot Availability Checking =====
+const timeSelect = document.querySelector('select[name="time"]');
+const dateInput = document.querySelector('input[name="date"]');
+
+// Store original time options
+const originalTimeOptions = timeSelect ? timeSelect.innerHTML : '';
+
+// Check slot availability when date is selected
+if (dateInput && timeSelect) {
+    dateInput.addEventListener('change', async function() {
+        const selectedDate = this.value;
+
+        if (!selectedDate) {
+            // Reset to original options if no date selected
+            timeSelect.innerHTML = originalTimeOptions;
+            return;
+        }
+
+        // Show loading state
+        timeSelect.innerHTML = '<option value="">Checking availability...</option>';
+        timeSelect.disabled = true;
+
+        try {
+            // Check if Google Script URL is configured
+            if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+                // Demo mode - show all slots available
+                timeSelect.innerHTML = originalTimeOptions;
+                timeSelect.disabled = false;
+                return;
+            }
+
+            // Fetch slot availability from API
+            const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=checkSlots&date=${selectedDate}`);
+            const data = await response.json();
+
+            if (data.success) {
+                // Build new options with availability info
+                let optionsHtml = '<option value="">Select time slot</option>';
+                const slots = data.slots;
+                const maxPerSlot = data.maxPerSlot || 3;
+
+                // Time slot labels mapping
+                const timeLabels = {
+                    '09:00': '09:00 AM', '09:30': '09:30 AM',
+                    '10:00': '10:00 AM', '10:30': '10:30 AM',
+                    '11:00': '11:00 AM', '11:30': '11:30 AM',
+                    '12:00': '12:00 PM', '12:30': '12:30 PM',
+                    '13:00': '01:00 PM', '13:30': '01:30 PM',
+                    '14:00': '02:00 PM', '14:30': '02:30 PM',
+                    '15:00': '03:00 PM', '15:30': '03:30 PM',
+                    '16:00': '04:00 PM', '16:30': '04:30 PM',
+                    '17:00': '05:00 PM', '17:30': '05:30 PM',
+                    '18:00': '06:00 PM', '18:30': '06:30 PM',
+                    '19:00': '07:00 PM'
+                };
+
+                for (const [time, info] of Object.entries(slots)) {
+                    const label = timeLabels[time] || time;
+
+                    if (info.full) {
+                        // Slot is full - disabled
+                        optionsHtml += `<option value="${time}" disabled>${label} - FULL</option>`;
+                    } else {
+                        // Show available spots
+                        const spotsText = info.available === maxPerSlot ? '' : ` (${info.available} spot${info.available > 1 ? 's' : ''} left)`;
+                        optionsHtml += `<option value="${time}">${label}${spotsText}</option>`;
+                    }
+                }
+
+                timeSelect.innerHTML = optionsHtml;
+            } else {
+                // Error from API - show all slots
+                console.error('Slot check error:', data.message);
+                timeSelect.innerHTML = originalTimeOptions;
+            }
+        } catch (error) {
+            console.error('Error checking slots:', error);
+            // On error, show all slots available
+            timeSelect.innerHTML = originalTimeOptions;
+        } finally {
+            timeSelect.disabled = false;
+        }
+    });
+}
 
 // ===== Parallax Effect for Hero Background =====
 window.addEventListener('scroll', () => {
