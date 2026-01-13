@@ -18,7 +18,7 @@ const CONFIG = {
   // MSG91 SMS Configuration
   MSG91_AUTH_KEY: '463859A66N4Ih6468c48e0dP1',  // MSG91 Auth Key
   MSG91_SENDER_ID: 'NAMMAO',                    // Sender ID from DLT
-  MSG91_TEMPLATE_ID: '1207176226012464195',     // Current template (change after new approval)
+  MSG91_TEMPLATE_ID: '690f78375bceb56a7e591805', // MSG91 Flow ID
   SEND_SMS: true                                // Set to false to disable SMS
 };
 
