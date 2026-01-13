@@ -1,6 +1,6 @@
 // ===== CONFIGURATION =====
 // IMPORTANT: Replace this URL with your deployed Google Apps Script Web App URL
-const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzzaUQ3tt8WoWCnaMQYIiS3-I3hWu-yWAxqZbILZnOnYjMUbH8DxLEBiJPLKKLk5IT5yQ/exec';
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7Sf9FlgddLVpeXqMVAaU6SqtPdNrfFDZtXpELo4xm9ZGBXzZ0USR5U8LicRDVkwSHbA/exec';
 
 // ===== Preloader =====
 window.addEventListener('load', () => {
