@@ -16,7 +16,7 @@ const CONFIG = {
   ADMIN_PASSWORD: 'Devini@2026',
 
   // MSG91 SMS Configuration
-  MSG91_AUTH_KEY: 'YOUR_AUTH_KEY_HERE',        // Replace with your MSG91 Auth Key
+  MSG91_AUTH_KEY: '463859A66N4Ih6468c48e0dP1',  // MSG91 Auth Key
   MSG91_SENDER_ID: 'NAMMAO',                    // Sender ID from DLT
   MSG91_TEMPLATE_ID: '1207176226012464195',     // Current template (change after new approval)
   SEND_SMS: true                                // Set to false to disable SMS
