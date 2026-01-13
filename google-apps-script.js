@@ -79,7 +79,7 @@ function checkSlotAvailability(dateStr) {
       for (let i = 1; i < data.length; i++) {
         const rowDate = data[i][7]; // Preferred Date column
         const rowTime = data[i][8]; // Preferred Time column
-        const status = data[i][11]; // Status column
+        const status = data[i][12]; // Status column
 
         // Skip cancelled appointments
         if (status && status.toLowerCase() === 'cancelled') continue;
@@ -510,13 +510,14 @@ function getAllAppointments() {
         preferredDate: row[7] || '',
         preferredTime: row[8] || '',
         service: row[9] || '',
-        healthConcern: row[10] || '',
-        status: row[11] || 'Pending',
-        notes: row[12] || '',
-        consultDate: row[13] || '',
-        diagnosis: row[14] || '',
-        medicines: row[15] || '',
-        followup: row[16] || ''
+        consultationType: row[10] || '',
+        healthConcern: row[11] || '',
+        status: row[12] || 'Pending',
+        notes: row[13] || '',
+        consultDate: row[14] || '',
+        diagnosis: row[15] || '',
+        medicines: row[16] || '',
+        followup: row[17] || ''
       });
     }
 
@@ -579,12 +580,12 @@ function updateAppointment(data) {
     if (!sheet) return createResponse(false, 'Sheet not found');
 
     const row = data.rowIndex;
-    if (data.status) sheet.getRange(row, 12).setValue(data.status);
-    if (data.notes !== undefined) sheet.getRange(row, 13).setValue(data.notes);
-    if (data.consultDate !== undefined) sheet.getRange(row, 14).setValue(data.consultDate);
-    if (data.diagnosis !== undefined) sheet.getRange(row, 15).setValue(data.diagnosis);
-    if (data.medicines !== undefined) sheet.getRange(row, 16).setValue(data.medicines);
-    if (data.followup !== undefined) sheet.getRange(row, 17).setValue(data.followup);
+    if (data.status) sheet.getRange(row, 13).setValue(data.status);
+    if (data.notes !== undefined) sheet.getRange(row, 14).setValue(data.notes);
+    if (data.consultDate !== undefined) sheet.getRange(row, 15).setValue(data.consultDate);
+    if (data.diagnosis !== undefined) sheet.getRange(row, 16).setValue(data.diagnosis);
+    if (data.medicines !== undefined) sheet.getRange(row, 17).setValue(data.medicines);
+    if (data.followup !== undefined) sheet.getRange(row, 18).setValue(data.followup);
 
     return createResponse(true, 'Appointment updated successfully');
   } catch (error) {
