@@ -408,8 +408,24 @@ if (appointmentForm) {
 
                 // Show WhatsApp follow-up option
                 setTimeout(() => {
-                    if (confirm('Would you like to confirm your appointment via WhatsApp?')) {
-                        const message = encodeURIComponent(`Hello Dr. Devini, I just booked an appointment for ${formatDateForDisplay(data.date)}.\n\nName: ${data.name}\nService: ${data.service}\nPhone: ${data.phone}`);
+                    if (confirm('Would you like to send appointment details via WhatsApp?')) {
+                        const serviceName = document.querySelector(`#service option[value="${data.service}"]`)?.textContent || data.service;
+                        const timeName = document.querySelector(`#time option[value="${data.time}"]`)?.textContent || data.time;
+                        const message = encodeURIComponent(`Hello Dr. Devini,
+
+I have booked an appointment through your website.
+
+*Appointment Details:*
+Name: ${data.name}
+Phone: ${data.phone}
+Date: ${formatDateForDisplay(data.date)}
+Time: ${timeName}
+Service: ${serviceName}
+${data.message ? `Health Concern: ${data.message}` : ''}
+
+Please confirm my appointment.
+
+Thank you.`);
                         window.open(`https://wa.me/918144002155?text=${message}`, '_blank');
                     }
                 }, 1000);
