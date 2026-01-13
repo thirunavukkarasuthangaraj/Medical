@@ -37,7 +37,11 @@ const CONFIG = {
   SEND_PATIENT_EMAIL: true,
 
   // WhatsApp number for notifications (optional)
-  WHATSAPP_NUMBER: '918144002155'
+  WHATSAPP_NUMBER: '918144002155',
+
+  // Admin credentials (SECURE - stored on server, not visible in browser)
+  ADMIN_USERNAME: 'Devini',
+  ADMIN_PASSWORD: 'Devini@2026'
 };
 
 /**
@@ -45,6 +49,11 @@ const CONFIG = {
  */
 function doGet(e) {
   const action = e.parameter ? e.parameter.action : null;
+
+  // Handle login action
+  if (action === 'login') {
+    return handleLogin(e.parameter.username, e.parameter.password);
+  }
 
   // If action is getAll, return all appointments for admin
   if (action === 'getAll') {
@@ -59,6 +68,36 @@ function doGet(e) {
       timestamp: new Date().toISOString()
     }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Handle admin login (server-side authentication)
+ */
+function handleLogin(username, password) {
+  try {
+    if (username === CONFIG.ADMIN_USERNAME && password === CONFIG.ADMIN_PASSWORD) {
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          success: true,
+          message: 'Login successful'
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } else {
+      return ContentService
+        .createTextOutput(JSON.stringify({
+          success: false,
+          message: 'Invalid username or password'
+        }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({
+        success: false,
+        message: 'Login error: ' + error.message
+      }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /**

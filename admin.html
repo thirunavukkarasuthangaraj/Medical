@@ -673,28 +673,56 @@
         // Configuration
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwlrR3ePLidmx-RSYbzdvaWpqsaGhlJePDYQbIa8DfGa0QhbOU1pmscJEFYxkg1y3yqkg/exec';
 
-        // Simple credentials (change these!)
-        const ADMIN_USERNAME = 'Devini';
-        const ADMIN_PASSWORD = 'Devini@2026';
+        // Credentials are now stored securely in Google Apps Script (server-side)
+        // No passwords visible in browser code!
 
         let allAppointments = [];
         let currentFilter = 'all';
 
-        // Login Function
-        function login() {
+        // Login Function (Server-side authentication)
+        async function login() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const errorEl = document.getElementById('loginError');
+            const loginBtn = document.querySelector('.login-btn');
 
-            if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-                sessionStorage.setItem('adminLoggedIn', 'true');
-                document.getElementById('loginPage').style.display = 'none';
-                document.getElementById('adminDashboard').style.display = 'block';
-                loadAppointments();
-            } else {
+            if (!username || !password) {
+                errorEl.textContent = 'Please enter username and password';
+                errorEl.style.display = 'block';
+                setTimeout(() => errorEl.style.display = 'none', 3000);
+                return;
+            }
+
+            // Show loading state
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            loginBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    sessionStorage.setItem('adminLoggedIn', 'true');
+                    sessionStorage.setItem('adminUser', username);
+                    document.getElementById('loginPage').style.display = 'none';
+                    document.getElementById('adminDashboard').style.display = 'block';
+                    document.getElementById('welcomeUser').textContent = 'Welcome, ' + username;
+                    loadAppointments();
+                } else {
+                    errorEl.textContent = result.message || 'Invalid username or password';
+                    errorEl.style.display = 'block';
+                    setTimeout(() => errorEl.style.display = 'none', 3000);
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                errorEl.textContent = 'Connection error. Please try again.';
                 errorEl.style.display = 'block';
                 setTimeout(() => errorEl.style.display = 'none', 3000);
             }
+
+            // Reset button
+            loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+            loginBtn.disabled = false;
         }
 
         // Check if already logged in
