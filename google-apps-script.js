@@ -918,6 +918,29 @@ Velachery Main Road, Chennai - 600042`;
 }
 
 /**
+ * TEST FUNCTION - Run this to grant Calendar permission
+ * Select this function and click Run
+ */
+function testCalendarPermission() {
+  // This will trigger the Calendar permission prompt
+  const calendar = CalendarApp.getDefaultCalendar();
+  const calendarName = calendar.getName();
+  console.log('Calendar access granted!');
+  console.log('Calendar name:', calendarName);
+
+  // Try to create a test event
+  const now = new Date();
+  const later = new Date(now.getTime() + 30 * 60 * 1000);
+  const testEvent = calendar.createEvent('TEST - Delete This', now, later);
+  console.log('Test event created:', testEvent.getId());
+
+  // Delete the test event
+  testEvent.deleteEvent();
+  console.log('Test event deleted');
+  console.log('SUCCESS! Calendar permission is working!');
+}
+
+/**
  * Initial setup - Run once
  */
 function initialSetup() {
