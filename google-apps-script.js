@@ -569,7 +569,9 @@ function sendDoctorNotification(data, appointmentId) {
           .value { background: white; padding: 10px 15px; border-radius: 5px; border-left: 3px solid #4CAF50; }
           .footer { background: #1a1a2e; color: white; padding: 20px; text-align: center; border-radius: 0 0 10px 10px; font-size: 12px; }
           .urgent { background: #FFF3E0; border: 1px solid #FF9800; padding: 15px; border-radius: 5px; margin-top: 20px; }
-          .btn { display: inline-block; padding: 12px 25px; background: #2E7D32; color: white; text-decoration: none; border-radius: 5px; margin: 5px; }
+          .btn { display: inline-block; padding: 14px 30px; text-decoration: none; border-radius: 8px; margin: 8px; font-weight: bold; font-size: 15px; }
+          .btn-call { background: #1976D2; color: #ffffff !important; border: 2px solid #1565C0; }
+          .btn-whatsapp { background: #25D366; color: #ffffff !important; border: 2px solid #1DA851; }
         </style>
       </head>
       <body>
@@ -633,8 +635,8 @@ function sendDoctorNotification(data, appointmentId) {
             </div>
 
             <div style="margin-top: 25px; text-align: center;">
-              <a href="tel:${data.phone}" class="btn">Call Patient</a>
-              <a href="${ScriptApp.getService().getUrl()}?action=confirmWhatsApp&id=${appointmentId}&phone=${data.phone}&name=${encodeURIComponent(data.name)}&date=${encodeURIComponent(formatDate(data.date))}&time=${encodeURIComponent(getTimeLabel(data.time))}&service=${encodeURIComponent(getServiceLabel(data.service))}" class="btn" style="background: #25D366;">WhatsApp + Confirm</a>
+              <a href="tel:${data.phone}" class="btn btn-call">📞 Call Patient</a>
+              <a href="${ScriptApp.getService().getUrl()}?action=confirmWhatsApp&id=${appointmentId}&phone=${data.phone}&name=${encodeURIComponent(data.name)}&date=${encodeURIComponent(formatDate(data.date))}&time=${encodeURIComponent(getTimeLabel(data.time))}&service=${encodeURIComponent(getServiceLabel(data.service))}" class="btn btn-whatsapp">💬 WhatsApp + Confirm</a>
             </div>
           </div>
           <div class="footer">
