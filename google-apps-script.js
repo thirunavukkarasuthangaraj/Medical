@@ -87,22 +87,32 @@ function confirmAndWhatsApp(params) {
     const time = params.time;
     const service = params.service;
 
-    // Find and update appointment status
+    // Find and update appointment status, get patient email
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+    let patientEmail = '';
+    let appointmentDate = null;
 
     if (sheet) {
       const data = sheet.getDataRange().getValues();
       for (let i = 1; i < data.length; i++) {
         if (data[i][0] === appointmentId) {
           sheet.getRange(i + 1, 11).setValue('Confirmed');
+          patientEmail = data[i][4]; // Email column
+          appointmentDate = data[i][6]; // Preferred date column
           break;
         }
       }
     }
 
-    // WhatsApp message
-    const message = `Hello ${name},
+    // Create Google Calendar event with Meet link
+    let meetLink = '';
+    if (patientEmail) {
+      meetLink = createCalendarEvent(appointmentId, name, patientEmail, date, time, service);
+    }
+
+    // WhatsApp message with Meet link
+    let message = `Hello ${name},
 
 This is Dr. Devini's Homeopathy Clinic.
 
@@ -111,9 +121,18 @@ Your appointment is CONFIRMED!
 Appointment ID: ${appointmentId}
 Date: ${date}
 Time: ${time}
-Service: ${service}
+Service: ${service}`;
 
-Address:
+    if (meetLink) {
+      message += `
+
+For Online Consultation:
+Google Meet: ${meetLink}`;
+    }
+
+    message += `
+
+For In-Person Visit:
 Dr. Devini's Homeopathy Clinic
 Velachery Main Road, Velachery
 Chennai - 600042
@@ -135,14 +154,18 @@ Healing Naturally, Living Fully`;
   <style>
     body { font-family: Arial; text-align: center; padding: 50px; background: #E8F5E9; }
     .success { color: #2E7D32; font-size: 24px; margin-bottom: 20px; }
+    .meet { color: #1a73e8; margin-bottom: 20px; }
     .message { color: #555; margin-bottom: 30px; }
-    a { background: #25D366; color: white; padding: 15px 30px; text-decoration: none; border-radius: 10px; }
+    a { background: #25D366; color: white; padding: 15px 30px; text-decoration: none; border-radius: 10px; margin: 5px; display: inline-block; }
+    .meet-btn { background: #1a73e8; }
   </style>
 </head>
 <body>
   <div class="success">Status Updated to CONFIRMED!</div>
+  ${meetLink ? '<div class="meet">Google Calendar Event Created with Meet Link!</div>' : ''}
   <div class="message">Redirecting to WhatsApp...</div>
   <a href="${whatsappUrl}">Click here if not redirected</a>
+  ${meetLink ? '<a href="' + meetLink + '" class="meet-btn">Join Google Meet</a>' : ''}
   <script>window.location.href = "${whatsappUrl}";</script>
 </body>
 </html>`;
@@ -153,6 +176,95 @@ Healing Naturally, Living Fully`;
     return ContentService
       .createTextOutput(JSON.stringify({ success: false, message: error.message }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Create Google Calendar event with Meet link
+ */
+function createCalendarEvent(appointmentId, patientName, patientEmail, dateStr, timeStr, service) {
+  try {
+    // Parse date
+    let eventDate = new Date(dateStr);
+    if (isNaN(eventDate)) {
+      // Try parsing different formats
+      const parts = dateStr.match(/(\d+)/g);
+      if (parts && parts.length >= 3) {
+        eventDate = new Date(parts[2], parts[1] - 1, parts[0]);
+      } else {
+        eventDate = new Date();
+        eventDate.setDate(eventDate.getDate() + 1);
+      }
+    }
+
+    // Set time based on slot
+    let startHour = 10;
+    if (timeStr.toLowerCase().includes('morning')) {
+      startHour = 10;
+    } else if (timeStr.toLowerCase().includes('afternoon')) {
+      startHour = 14;
+    } else if (timeStr.toLowerCase().includes('evening')) {
+      startHour = 17;
+    }
+
+    const startTime = new Date(eventDate);
+    startTime.setHours(startHour, 0, 0, 0);
+
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + 30);
+
+    // Create calendar event
+    const calendar = CalendarApp.getDefaultCalendar();
+    const event = calendar.createEvent(
+      `Dr. Devini Clinic - ${patientName} (${service})`,
+      startTime,
+      endTime,
+      {
+        description: `Appointment ID: ${appointmentId}
+Patient: ${patientName}
+Service: ${service}
+
+Dr. Devini's Homeopathy Clinic
+Velachery Main Road, Chennai - 600042
+Contact: +91 8144002155`,
+        guests: patientEmail,
+        sendInvites: true
+      }
+    );
+
+    // Add Google Meet
+    event.addPopupReminder(60); // 1 hour before
+    event.addPopupReminder(15); // 15 minutes before
+
+    // Try to add Meet conference
+    let meetLink = '';
+    try {
+      const eventId = event.getId().split('@')[0];
+      const calendarId = calendar.getId();
+
+      // Use Calendar API to add conference
+      const resource = Calendar.Events.get(calendarId, eventId);
+      resource.conferenceData = {
+        createRequest: {
+          requestId: appointmentId,
+          conferenceSolutionKey: { type: 'hangoutsMeet' }
+        }
+      };
+
+      const updatedEvent = Calendar.Events.patch(resource, calendarId, eventId, { conferenceDataVersion: 1 });
+
+      if (updatedEvent.conferenceData && updatedEvent.conferenceData.entryPoints) {
+        meetLink = updatedEvent.conferenceData.entryPoints[0].uri;
+      }
+    } catch (meetError) {
+      console.log('Meet link creation failed, but calendar event created');
+    }
+
+    return meetLink;
+
+  } catch (error) {
+    console.error('Calendar event creation failed:', error);
+    return '';
   }
 }
 
