@@ -13,8 +13,80 @@ const CONFIG = {
   SEND_PATIENT_EMAIL: true,
   WHATSAPP_NUMBER: '918144002155',
   ADMIN_USERNAME: 'Devini',
-  ADMIN_PASSWORD: 'Devini@2026'
+  ADMIN_PASSWORD: 'Devini@2026',
+
+  // MSG91 SMS Configuration
+  MSG91_AUTH_KEY: 'YOUR_AUTH_KEY_HERE',        // Replace with your MSG91 Auth Key
+  MSG91_SENDER_ID: 'DEVINI',                    // Replace with your 6-char Sender ID
+  MSG91_TEMPLATE_ID: 'YOUR_TEMPLATE_ID_HERE',   // Replace with your DLT Template ID
+  SEND_SMS: true                                // Set to false to disable SMS
 };
+
+/**
+ * Send SMS via MSG91
+ * @param {string} phone - Mobile number (10 digits)
+ * @param {object} variables - Template variables {name, date, time, appointmentId}
+ */
+function sendSMS(phone, variables) {
+  if (!CONFIG.SEND_SMS) {
+    console.log('SMS disabled in config');
+    return { success: false, message: 'SMS disabled' };
+  }
+
+  try {
+    // Clean phone number - remove all non-digits
+    let cleanPhone = phone.replace(/\D/g, '');
+
+    // Handle different formats
+    if (cleanPhone.length === 10) {
+      cleanPhone = '91' + cleanPhone;  // Add country code
+    } else if (cleanPhone.startsWith('0')) {
+      cleanPhone = '91' + cleanPhone.substring(1);
+    } else if (!cleanPhone.startsWith('91')) {
+      cleanPhone = '91' + cleanPhone;
+    }
+
+    console.log('Sending SMS to:', cleanPhone);
+
+    // MSG91 Flow API
+    const url = 'https://control.msg91.com/api/v5/flow/';
+
+    const payload = {
+      flow_id: CONFIG.MSG91_TEMPLATE_ID,
+      mobiles: cleanPhone,
+      // Template variables - adjust these based on your DLT template
+      VAR1: variables.name || '',
+      VAR2: variables.appointmentId || '',
+      VAR3: variables.date || '',
+      VAR4: variables.time || ''
+    };
+
+    const options = {
+      method: 'POST',
+      contentType: 'application/json',
+      headers: {
+        'authkey': CONFIG.MSG91_AUTH_KEY
+      },
+      payload: JSON.stringify(payload),
+      muteHttpExceptions: true
+    };
+
+    const response = UrlFetchApp.fetch(url, options);
+    const result = JSON.parse(response.getContentText());
+
+    console.log('MSG91 Response:', JSON.stringify(result));
+
+    if (result.type === 'success') {
+      return { success: true, message: 'SMS sent successfully' };
+    } else {
+      return { success: false, message: result.message || 'SMS failed' };
+    }
+
+  } catch (error) {
+    console.error('SMS Error:', error.message);
+    return { success: false, message: error.message };
+  }
+}
 
 /**
  * Handle GET requests
@@ -191,6 +263,20 @@ function confirmAndWhatsApp(params) {
             consultationType = ct.includes('online') ? 'online' : 'offline';
           }
           debugInfo += `Found row ${i+1}, Email: ${patientEmail}, Type: ${consultationType}. `;
+
+          // Send SMS on confirmation
+          try {
+            const smsResult = sendSMS(phone, {
+              name: name,
+              appointmentId: appointmentId,
+              date: date,
+              time: time
+            });
+            debugInfo += `SMS: ${smsResult.success ? 'Sent' : smsResult.message}. `;
+          } catch (smsErr) {
+            debugInfo += `SMS Error: ${smsErr.message}. `;
+          }
+
           break;
         }
       }
