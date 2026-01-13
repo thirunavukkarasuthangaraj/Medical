@@ -186,12 +186,24 @@ function createCalendarEvent(appointmentId, patientName, patientEmail, dateStr, 
     }
 
     let startHour = 10;
-    if (timeStr.toLowerCase().includes('morning')) startHour = 10;
-    else if (timeStr.toLowerCase().includes('afternoon')) startHour = 14;
-    else if (timeStr.toLowerCase().includes('evening')) startHour = 17;
+    let startMinute = 0;
+
+    // Handle new format (HH:MM like "09:00", "14:30")
+    if (timeStr && timeStr.includes(':')) {
+      const [h, m] = timeStr.split(':');
+      startHour = parseInt(h);
+      startMinute = parseInt(m);
+    }
+    // Handle old format
+    else if (timeStr) {
+      const t = timeStr.toLowerCase();
+      if (t.includes('morning')) startHour = 10;
+      else if (t.includes('afternoon')) startHour = 14;
+      else if (t.includes('evening')) startHour = 17;
+    }
 
     const startTime = new Date(eventDate);
-    startTime.setHours(startHour, 0, 0, 0);
+    startTime.setHours(startHour, startMinute, 0, 0);
     const endTime = new Date(startTime);
     endTime.setMinutes(endTime.getMinutes() + 30);
 
@@ -441,12 +453,26 @@ function getServiceLabel(service) {
  * Get time label
  */
 function getTimeLabel(time) {
-  const times = {
+  if (!time) return 'Not specified';
+
+  // Handle old format
+  const oldTimes = {
     'morning': 'Morning (9AM - 12PM)',
     'afternoon': 'Afternoon (12PM - 4PM)',
     'evening': 'Evening (4PM - 7PM)'
   };
-  return times[time] || time || 'Not specified';
+  if (oldTimes[time]) return oldTimes[time];
+
+  // Handle new format (HH:MM)
+  if (time.includes(':')) {
+    const [hours, mins] = time.split(':');
+    const h = parseInt(hours);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour12 = h > 12 ? h - 12 : (h === 0 ? 12 : h);
+    return `${hour12}:${mins} ${ampm}`;
+  }
+
+  return time;
 }
 
 /**
