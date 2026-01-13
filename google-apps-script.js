@@ -60,6 +60,11 @@ function doGet(e) {
     return getAllAppointments();
   }
 
+  // Handle confirm and WhatsApp action
+  if (action === 'confirmWhatsApp') {
+    return confirmAndWhatsApp(e.parameter);
+  }
+
   // Default response
   return ContentService
     .createTextOutput(JSON.stringify({
@@ -68,6 +73,87 @@ function doGet(e) {
       timestamp: new Date().toISOString()
     }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Confirm appointment and redirect to WhatsApp
+ */
+function confirmAndWhatsApp(params) {
+  try {
+    const appointmentId = params.id;
+    const phone = params.phone;
+    const name = params.name;
+    const date = params.date;
+    const time = params.time;
+    const service = params.service;
+
+    // Find and update appointment status
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.SHEET_NAME);
+
+    if (sheet) {
+      const data = sheet.getDataRange().getValues();
+      for (let i = 1; i < data.length; i++) {
+        if (data[i][0] === appointmentId) {
+          sheet.getRange(i + 1, 11).setValue('Confirmed');
+          break;
+        }
+      }
+    }
+
+    // WhatsApp message
+    const message = `Hello ${name},
+
+This is Dr. Devini's Homeopathy Clinic.
+
+Your appointment is CONFIRMED!
+
+Appointment ID: ${appointmentId}
+Date: ${date}
+Time: ${time}
+Service: ${service}
+
+Address:
+Dr. Devini's Homeopathy Clinic
+Velachery Main Road, Velachery
+Chennai - 600042
+
+Contact: +91 8144002155
+
+Please arrive 10 minutes early with any previous medical reports.
+
+Thank you for choosing us!
+Healing Naturally, Living Fully`;
+
+    const whatsappUrl = `https://wa.me/91${phone.replace(/\D/g, '')}?text=${encodeURIComponent(message)}`;
+
+    // Return HTML that redirects to WhatsApp
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting to WhatsApp...</title>
+  <style>
+    body { font-family: Arial; text-align: center; padding: 50px; background: #E8F5E9; }
+    .success { color: #2E7D32; font-size: 24px; margin-bottom: 20px; }
+    .message { color: #555; margin-bottom: 30px; }
+    a { background: #25D366; color: white; padding: 15px 30px; text-decoration: none; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="success">Status Updated to CONFIRMED!</div>
+  <div class="message">Redirecting to WhatsApp...</div>
+  <a href="${whatsappUrl}">Click here if not redirected</a>
+  <script>window.location.href = "${whatsappUrl}";</script>
+</body>
+</html>`;
+
+    return HtmlService.createHtmlOutput(html);
+
+  } catch (error) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ success: false, message: error.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
 /**
@@ -436,28 +522,7 @@ function sendDoctorNotification(data, appointmentId) {
 
             <div style="margin-top: 25px; text-align: center;">
               <a href="tel:${data.phone}" class="btn">Call Patient</a>
-              <a href="https://wa.me/91${data.phone.replace(/\D/g, '')}?text=${encodeURIComponent(`Hello ${data.name},
-
-This is Dr. Devini's Homeopathy Clinic.
-
-✅ Your appointment is CONFIRMED!
-
-📋 Appointment ID: ${appointmentId}
-📅 Date: ${formatDate(data.date)}
-⏰ Time: ${getTimeLabel(data.time)}
-🏥 Service: ${getServiceLabel(data.service)}
-
-📍 Address:
-Dr. Devini's Homeopathy Clinic
-Velachery Main Road, Velachery
-Chennai - 600042
-
-📞 Contact: +91 8144002155
-
-Please arrive 10 minutes early with any previous medical reports.
-
-Thank you for choosing us!
-🌿 Healing Naturally, Living Fully`)}" class="btn" style="background: #25D366;">WhatsApp</a>
+              <a href="${ScriptApp.getService().getUrl()}?action=confirmWhatsApp&id=${appointmentId}&phone=${data.phone}&name=${encodeURIComponent(data.name)}&date=${encodeURIComponent(formatDate(data.date))}&time=${encodeURIComponent(getTimeLabel(data.time))}&service=${encodeURIComponent(getServiceLabel(data.service))}" class="btn" style="background: #25D366;">WhatsApp + Confirm</a>
             </div>
           </div>
           <div class="footer">
