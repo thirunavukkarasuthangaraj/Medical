@@ -137,19 +137,24 @@ function confirmAndWhatsApp(params) {
     let patientEmail = '';
     let debugInfo = 'Debug: ';
 
+    let consultationType = 'offline'; // default
+
     if (sheet) {
       const data = sheet.getDataRange().getValues();
       const headers = data[0];
 
-      // Find email column index dynamically
+      // Find column indexes dynamically
       let emailColIndex = -1;
       let statusColIndex = -1;
+      let consultTypeColIndex = -1;
       for (let c = 0; c < headers.length; c++) {
-        if (headers[c].toString().toLowerCase().includes('email')) emailColIndex = c;
-        if (headers[c].toString().toLowerCase() === 'status') statusColIndex = c;
+        const header = headers[c].toString().toLowerCase();
+        if (header.includes('email')) emailColIndex = c;
+        if (header === 'status') statusColIndex = c;
+        if (header.includes('consultation type')) consultTypeColIndex = c;
       }
 
-      debugInfo += `EmailCol:${emailColIndex}, StatusCol:${statusColIndex}. `;
+      debugInfo += `EmailCol:${emailColIndex}, StatusCol:${statusColIndex}, ConsultTypeCol:${consultTypeColIndex}. `;
 
       for (let i = 1; i < data.length; i++) {
         if (data[i][0] === appointmentId) {
@@ -161,56 +166,85 @@ function confirmAndWhatsApp(params) {
           if (emailColIndex >= 0) {
             patientEmail = data[i][emailColIndex];
           }
-          debugInfo += `Found row ${i+1}, Email: ${patientEmail}. `;
+          // Get consultation type
+          if (consultTypeColIndex >= 0) {
+            const ct = data[i][consultTypeColIndex].toString().toLowerCase();
+            consultationType = ct.includes('online') ? 'online' : 'offline';
+          }
+          debugInfo += `Found row ${i+1}, Email: ${patientEmail}, Type: ${consultationType}. `;
           break;
         }
       }
     }
 
+    const isOnline = consultationType === 'online';
+
     // Create calendar event
     let meetLink = '';
     let calendarError = '';
+    let calendarCreated = false;
+
     if (patientEmail) {
       try {
-        meetLink = createCalendarEvent(appointmentId, name, patientEmail, date, time, service);
-        debugInfo += `Calendar created. Meet: ${meetLink || 'none'}. `;
+        const calResult = createCalendarEvent(appointmentId, name, patientEmail, date, time, service, isOnline);
+        if (calResult.success) {
+          calendarCreated = true;
+          meetLink = calResult.meetLink || '';
+          debugInfo += `Calendar created (${isOnline ? 'Online' : 'Offline'}). Meet: ${meetLink || 'N/A'}. `;
+        } else {
+          calendarError = calResult.error || 'Unknown error';
+          debugInfo += `Calendar error: ${calendarError}. `;
+        }
       } catch (calErr) {
         calendarError = calErr.message;
-        debugInfo += `Calendar error: ${calErr.message}. `;
+        debugInfo += `Calendar exception: ${calErr.message}. `;
       }
     } else {
       debugInfo += 'No email found - skipping calendar. ';
     }
 
-    // WhatsApp message TO PATIENT
+    // WhatsApp message TO PATIENT - different for Online vs Offline
+    const consultLabel = isOnline ? 'ONLINE VIDEO CONSULTATION' : 'IN-PERSON CLINIC VISIT';
+
     let message = `Hello ${name},
 
 This is Dr. Devini's Homeopathy Clinic.
 
 Your appointment is CONFIRMED!
 
-Appointment ID: ${appointmentId}
+*Appointment Details:*
+ID: ${appointmentId}
 Date: ${date}
 Time: ${time}
-Service: ${service}`;
+Service: ${service}
+Type: ${consultLabel}`;
 
-    if (meetLink) {
+    if (isOnline && meetLink) {
       message += `
 
-For Online Consultation:
-Google Meet: ${meetLink}`;
-    }
+*Online Consultation Link:*
+Google Meet: ${meetLink}
 
-    message += `
+Please join the video call 5 minutes before your scheduled time.`;
+    } else if (isOnline && !meetLink) {
+      message += `
 
-For In-Person Visit:
+*Online Consultation:*
+You will receive the Google Meet link in your email calendar invite.`;
+    } else {
+      message += `
+
+*Clinic Address:*
 Dr. Devini's Homeopathy Clinic
 Velachery Main Road, Velachery
 Chennai - 600042
 
-Contact: +91 8144002155
+Please arrive 10 minutes early with any previous medical reports.`;
+    }
 
-Please arrive 10 minutes early with any previous medical reports.
+    message += `
+
+Contact: +91 8144002155
 
 Thank you for choosing us!
 Healing Naturally, Living Fully`;
@@ -251,13 +285,17 @@ Healing Naturally, Living Fully`;
     <div class="success">Appointment Confirmed!</div>
     <div class="info">ID: ${appointmentId}</div>
     <div class="info">Patient: ${name}</div>
+    <div class="info" style="background:${isOnline ? '#E3F2FD' : '#FFF3E0'};padding:8px 15px;border-radius:5px;color:${isOnline ? '#1565C0' : '#E65100'};font-weight:bold;">
+      ${isOnline ? 'ONLINE VIDEO CONSULTATION' : 'IN-PERSON CLINIC VISIT'}
+    </div>
     <div class="phone-box">
       <p class="phone">+91 ${cleanPhone}</p>
     </div>
-    ${meetLink ? '<div class="info" style="color:#1a73e8;">Calendar Event Created with Meet Link</div>' : ''}
+    ${calendarCreated ? '<div class="info" style="color:#2E7D32;">Calendar Event Created</div>' : ''}
+    ${meetLink ? '<div class="info" style="color:#1a73e8;">Google Meet Link Generated</div>' : ''}
     ${calendarError ? '<div class="info" style="color:#e53935;">Calendar Error: ' + calendarError + '</div>' : ''}
     <a href="${whatsappUrl}" target="_blank" class="btn">Send WhatsApp Message</a>
-    ${meetLink ? '<a href="' + meetLink + '" target="_blank" class="btn meet-btn">Open Google Meet</a>' : ''}
+    ${isOnline && meetLink ? '<a href="' + meetLink + '" target="_blank" class="btn meet-btn">Open Google Meet</a>' : ''}
     <button onclick="window.close()" class="btn close-btn">Close This Window</button>
     <div style="margin-top:15px;padding:10px;background:#f5f5f5;border-radius:8px;font-size:11px;color:#666;text-align:left;word-break:break-all;">${debugInfo}</div>
   </div>
@@ -281,9 +319,10 @@ Healing Naturally, Living Fully`;
 }
 
 /**
- * Create Google Calendar event with Meet link
+ * Create Google Calendar event
+ * @param {boolean} isOnline - If true, create with Google Meet link; if false, just reminder
  */
-function createCalendarEvent(appointmentId, patientName, patientEmail, dateStr, timeStr, service) {
+function createCalendarEvent(appointmentId, patientName, patientEmail, dateStr, timeStr, service, isOnline) {
   try {
     let eventDate = new Date(dateStr);
     if (isNaN(eventDate)) {
@@ -318,13 +357,31 @@ function createCalendarEvent(appointmentId, patientName, patientEmail, dateStr, 
     const endTime = new Date(startTime);
     endTime.setMinutes(endTime.getMinutes() + 30);
 
+    const consultType = isOnline ? 'Online Video Consultation' : 'In-Person Visit';
     const calendar = CalendarApp.getDefaultCalendar();
+
+    let description = `Appointment ID: ${appointmentId}
+Patient: ${patientName}
+Service: ${service}
+Type: ${consultType}
+
+Dr. Devini's Homeopathy Clinic
+Velachery Main Road, Chennai - 600042
+Contact: +91 8144002155`;
+
+    if (!isOnline) {
+      description += `
+
+CLINIC VISIT REMINDER
+Please arrive 10 minutes early with previous medical reports.`;
+    }
+
     const event = calendar.createEvent(
-      `Dr. Devini Clinic - ${patientName} (${service})`,
+      `Dr. Devini Clinic - ${patientName} (${consultType})`,
       startTime,
       endTime,
       {
-        description: `Appointment ID: ${appointmentId}\nPatient: ${patientName}\nService: ${service}\n\nDr. Devini's Homeopathy Clinic\nVelachery Main Road, Chennai - 600042\nContact: +91 8144002155`,
+        description: description,
         guests: patientEmail,
         sendInvites: true
       }
@@ -334,28 +391,32 @@ function createCalendarEvent(appointmentId, patientName, patientEmail, dateStr, 
     event.addPopupReminder(15);
 
     let meetLink = '';
-    try {
-      const eventId = event.getId().split('@')[0];
-      const calendarId = calendar.getId();
-      const resource = Calendar.Events.get(calendarId, eventId);
-      resource.conferenceData = {
-        createRequest: {
-          requestId: appointmentId,
-          conferenceSolutionKey: { type: 'hangoutsMeet' }
+
+    // Only create Google Meet link for ONLINE consultations
+    if (isOnline) {
+      try {
+        const eventId = event.getId().split('@')[0];
+        const calendarId = calendar.getId();
+        const resource = Calendar.Events.get(calendarId, eventId);
+        resource.conferenceData = {
+          createRequest: {
+            requestId: appointmentId,
+            conferenceSolutionKey: { type: 'hangoutsMeet' }
+          }
+        };
+        const updatedEvent = Calendar.Events.patch(resource, calendarId, eventId, { conferenceDataVersion: 1 });
+        if (updatedEvent.conferenceData && updatedEvent.conferenceData.entryPoints) {
+          meetLink = updatedEvent.conferenceData.entryPoints[0].uri;
         }
-      };
-      const updatedEvent = Calendar.Events.patch(resource, calendarId, eventId, { conferenceDataVersion: 1 });
-      if (updatedEvent.conferenceData && updatedEvent.conferenceData.entryPoints) {
-        meetLink = updatedEvent.conferenceData.entryPoints[0].uri;
+      } catch (meetError) {
+        console.log('Meet link creation failed: ' + meetError.message);
       }
-    } catch (meetError) {
-      console.log('Meet link creation failed');
     }
 
-    return meetLink;
+    return { success: true, meetLink: meetLink, isOnline: isOnline };
   } catch (error) {
     console.error('Calendar error:', error);
-    return '';
+    return { success: false, error: error.message };
   }
 }
 
