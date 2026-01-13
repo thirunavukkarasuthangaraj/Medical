@@ -833,15 +833,26 @@
                                 <input type="email" name="email" placeholder="Enter your email" required>
                             </div>
                             <div class="form-group">
-                                <label><i class="fas fa-birthday-cake"></i> Age</label>
-                                <input type="number" name="age" placeholder="Enter age" min="1" max="120">
+                                <label><i class="fas fa-venus-mars"></i> Gender *</label>
+                                <select name="gender" required>
+                                    <option value="">Select gender</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
                             </div>
                         </div>
                         <div class="form-row">
                             <div class="form-group">
+                                <label><i class="fas fa-birthday-cake"></i> Age</label>
+                                <input type="number" name="age" placeholder="Enter age" min="1" max="120">
+                            </div>
+                            <div class="form-group">
                                 <label><i class="fas fa-calendar"></i> Preferred Date *</label>
                                 <input type="date" name="date" required>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="form-group">
                                 <label><i class="fas fa-clock"></i> Preferred Time *</label>
                                 <select name="time" required>
@@ -869,21 +880,21 @@
                                     <option value="19:00">07:00 PM</option>
                                 </select>
                             </div>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-stethoscope"></i> Service Required *</label>
-                            <select name="service" required>
-                                <option value="">Select a service</option>
-                                <option value="general">General Consultation</option>
-                                <option value="pediatric">Pediatric Care</option>
-                                <option value="women">Women's Health / PCOS</option>
-                                <option value="skin">Skin & Allergies</option>
-                                <option value="respiratory">Respiratory Care</option>
-                                <option value="mental">Mental Wellness</option>
-                                <option value="chronic">Chronic Disease Management</option>
-                                <option value="followup">Follow-up Consultation</option>
-                                <option value="other">Other</option>
-                            </select>
+                            <div class="form-group">
+                                <label><i class="fas fa-stethoscope"></i> Service Required *</label>
+                                <select name="service" required>
+                                    <option value="">Select a service</option>
+                                    <option value="general">General Consultation</option>
+                                    <option value="pediatric">Pediatric Care</option>
+                                    <option value="women">Women's Health / PCOS</option>
+                                    <option value="skin">Skin & Allergies</option>
+                                    <option value="respiratory">Respiratory Care</option>
+                                    <option value="mental">Mental Wellness</option>
+                                    <option value="chronic">Chronic Disease Management</option>
+                                    <option value="followup">Follow-up Consultation</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="form-group">
                             <label><i class="fas fa-comment-medical"></i> Health Concern</label>

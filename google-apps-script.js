@@ -68,9 +68,9 @@ function checkSlotAvailability(dateStr) {
     if (sheet) {
       const data = sheet.getDataRange().getValues();
       for (let i = 1; i < data.length; i++) {
-        const rowDate = data[i][6]; // Preferred Date column
-        const rowTime = data[i][7]; // Preferred Time column
-        const status = data[i][10]; // Status column
+        const rowDate = data[i][7]; // Preferred Date column
+        const rowTime = data[i][8]; // Preferred Time column
+        const status = data[i][11]; // Status column
 
         // Skip cancelled appointments
         if (status && status.toLowerCase() === 'cancelled') continue;
@@ -140,8 +140,8 @@ function confirmAndWhatsApp(params) {
       const data = sheet.getDataRange().getValues();
       for (let i = 1; i < data.length; i++) {
         if (data[i][0] === appointmentId) {
-          sheet.getRange(i + 1, 11).setValue('Confirmed');
-          patientEmail = data[i][4];
+          sheet.getRange(i + 1, 12).setValue('Confirmed'); // Status is now column 12
+          patientEmail = data[i][4]; // Email is still column 5 (index 4)
           break;
         }
       }
@@ -367,17 +367,18 @@ function getAllAppointments() {
         name: row[2] || '',
         phone: row[3] || '',
         email: row[4] || '',
-        age: row[5] || '',
-        preferredDate: row[6] || '',
-        preferredTime: row[7] || '',
-        service: row[8] || '',
-        healthConcern: row[9] || '',
-        status: row[10] || 'Pending',
-        notes: row[11] || '',
-        consultDate: row[12] || '',
-        diagnosis: row[13] || '',
-        medicines: row[14] || '',
-        followup: row[15] || ''
+        gender: row[5] || '',
+        age: row[6] || '',
+        preferredDate: row[7] || '',
+        preferredTime: row[8] || '',
+        service: row[9] || '',
+        healthConcern: row[10] || '',
+        status: row[11] || 'Pending',
+        notes: row[12] || '',
+        consultDate: row[13] || '',
+        diagnosis: row[14] || '',
+        medicines: row[15] || '',
+        followup: row[16] || ''
       });
     }
 
@@ -438,12 +439,12 @@ function updateAppointment(data) {
     if (!sheet) return createResponse(false, 'Sheet not found');
 
     const row = data.rowIndex;
-    if (data.status) sheet.getRange(row, 11).setValue(data.status);
-    if (data.notes !== undefined) sheet.getRange(row, 12).setValue(data.notes);
-    if (data.consultDate !== undefined) sheet.getRange(row, 13).setValue(data.consultDate);
-    if (data.diagnosis !== undefined) sheet.getRange(row, 14).setValue(data.diagnosis);
-    if (data.medicines !== undefined) sheet.getRange(row, 15).setValue(data.medicines);
-    if (data.followup !== undefined) sheet.getRange(row, 16).setValue(data.followup);
+    if (data.status) sheet.getRange(row, 12).setValue(data.status);
+    if (data.notes !== undefined) sheet.getRange(row, 13).setValue(data.notes);
+    if (data.consultDate !== undefined) sheet.getRange(row, 14).setValue(data.consultDate);
+    if (data.diagnosis !== undefined) sheet.getRange(row, 15).setValue(data.diagnosis);
+    if (data.medicines !== undefined) sheet.getRange(row, 16).setValue(data.medicines);
+    if (data.followup !== undefined) sheet.getRange(row, 17).setValue(data.followup);
 
     return createResponse(true, 'Appointment updated successfully');
   } catch (error) {
@@ -472,7 +473,7 @@ function saveToSheet(data, appointmentId) {
 
   if (!sheet) {
     sheet = ss.insertSheet(CONFIG.SHEET_NAME);
-    const headers = ['Appointment ID', 'Timestamp', 'Name', 'Phone', 'Email', 'Age', 'Preferred Date', 'Preferred Time', 'Service', 'Health Concern', 'Status', 'Notes', 'Consultation Date', 'Diagnosis', 'Medicines Prescribed', 'Next Follow-up'];
+    const headers = ['Appointment ID', 'Timestamp', 'Name', 'Phone', 'Email', 'Gender', 'Age', 'Preferred Date', 'Preferred Time', 'Service', 'Health Concern', 'Status', 'Notes', 'Consultation Date', 'Diagnosis', 'Medicines Prescribed', 'Next Follow-up'];
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#2E7D32').setFontColor('#FFFFFF');
     sheet.setFrozenRows(1);
@@ -484,6 +485,7 @@ function saveToSheet(data, appointmentId) {
     data.name || '',
     data.phone || '',
     data.email || '',
+    data.gender || '',
     data.age || '',
     formatDate(data.date),
     data.time || 'Not specified',
