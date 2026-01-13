@@ -865,8 +865,8 @@ function sendDoctorNotification(data, appointmentId) {
 
       <!-- Buttons -->
       <div style="text-align: center;">
-        <a href="tel:${data.phone}" style="display: inline-block; background: #1976D2; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin: 5px; font-weight: bold; font-size: 14px;">📞 Call Patient</a>
-        <a href="${ScriptApp.getService().getUrl()}?action=confirmWhatsApp&id=${appointmentId}&phone=${data.phone}&name=${encodeURIComponent(data.name)}&date=${encodeURIComponent(formatDate(data.date))}&time=${encodeURIComponent(getTimeLabel(data.time))}&service=${encodeURIComponent(getServiceLabel(data.service))}" style="display: inline-block; background: #25D366; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin: 5px; font-weight: bold; font-size: 14px;">💬 WhatsApp + Confirm</a>
+        <a href="tel:${data.phone}" style="display: inline-block; background: #1976D2; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin: 5px; font-weight: bold; font-size: 14px;">CALL PATIENT</a>
+        <a href="${ScriptApp.getService().getUrl()}?action=confirmWhatsApp&id=${appointmentId}&phone=${data.phone}&name=${encodeURIComponent(data.name)}&date=${encodeURIComponent(formatDate(data.date))}&time=${encodeURIComponent(getTimeLabel(data.time))}&service=${encodeURIComponent(getServiceLabel(data.service))}" style="display: inline-block; background: #25D366; color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; margin: 5px; font-weight: bold; font-size: 14px;">WHATSAPP + CONFIRM</a>
       </div>
     </div>
 
