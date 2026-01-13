@@ -758,6 +758,19 @@ img {
     box-shadow: var(--shadow-lg);
 }
 
+.doctor-photo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: var(--border-radius);
+    transition: transform 0.5s ease;
+}
+
+.about-image-main:hover .doctor-photo {
+    transform: scale(1.05);
+}
+
 .about-icon-large i {
     font-size: 80px;
     color: var(--primary-color);
